@@ -283,12 +283,15 @@
   }
 
   /* Add modal form */
-  .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-  .type-btn {
-    padding: 12px; border-radius: 12px; border: 2px solid var(--border);
+  .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; width: 100%; }
+.type-btn {
+    padding: 12px 6px; border-radius: 12px; border: 2px solid var(--border);
     background: var(--bg); color: var(--muted);
-    font-weight: 800; font-size: 14px; font-family: 'Barlow Condensed', sans-serif;
-    letter-spacing: .03em; transition: all .15s;
+    font-weight: 800; font-size: 13px; font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: .02em; transition: all .15s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+  }
+
   }
   .type-btn.active { border-color: var(--ink); background: var(--ink); color: #FFF; }
 
