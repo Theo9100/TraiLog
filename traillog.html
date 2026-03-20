@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>TrailLog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #F5F4F0;
+    --paper:   #FFFFFF;
+    --ink:     #0D0D0B;
+    --muted:   #6B6B65;
+    --border:  #E2E0D8;
+    --tag:     #ECEAE3;
+    --z1: #B0ADAD; --z2: #6B8F71; --z3: #D4A843; --z4: #C17A3A; --z5: #B94040;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  button { font-family: 'DM Sans', sans-serif; cursor: pointer; }
+  input, textarea, select { font-family: 'DM Sans', sans-serif; }
+  input[type=number]::-webkit-inner-spin-button { opacity: .4; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  /* ── Header ── */
+  header {
+    background: var(--paper);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .header-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 20px; height: 56px; gap: 12px;
+  }
+  .logo { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 22px; letter-spacing: .04em; white-space: nowrap; }
+  .logo span { color: var(--muted); }
+  .logo small { font-family: 'DM Sans', sans-serif; font-size: 11px; color: var(--muted); font-weight: 500; margin-left: 8px; }
+
+  nav { display: flex; gap: 2px; }
+  .nav-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: 10px; border: none;
+    background: transparent; color: var(--muted);
+    font-size: 13px; font-weight: 600; transition: all .15s;
+    white-space: nowrap;
+  }
+  .nav-btn.active { background: var(--bg); color: var(--ink); }
+  .nav-btn svg { flex-shrink: 0; }
+
+  .btn-add {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--ink); color: #FFF; border: none; border-radius: 10px;
+    padding: 9px 16px; font-size: 13px; font-weight: 800;
+    font-family: 'Barlow Condensed', sans-serif; letter-spacing: .06em;
+    white-space: nowrap;
+  }
+
+  /* ── Page wrapper ── */
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px; }
+  .page-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900; font-size: 30px; letter-spacing: .02em; line-height: 1;
+    margin-bottom: 4px;
+  }
+  .page-rule { width: 40px; height: 3px; background: var(--ink); border-radius: 99px; margin-bottom: 22px; }
+
+  /* ── Views ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── Cards & surfaces ── */
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 20px;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 99px; border: 1.5px solid;
+    font-size: 10px; font-weight: 800; letter-spacing: .06em;
+  }
+  .badge-trail { border-color: var(--ink); color: var(--ink); }
+  .badge-renfo { border-color: var(--muted); color: var(--muted); }
+  .zone-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 99px; border: 1.5px solid; font-size: 10px; font-weight: 700; letter-spacing: .05em; }
+
+  /* ── Week view ── */
+  .week-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
+  }
+  .week-nav-center { display: flex; align-items: center; gap: 10px; }
+  .icon-btn {
+    background: var(--paper); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .week-label { font-size: 14px; font-weight: 700; }
+  .week-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .week-summary {
+    display: flex; gap: 16px; background: var(--paper);
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 8px 16px;
+  }
+  .week-summary-item { text-align: center; }
+  .week-summary-val { font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 900; color: var(--ink); }
+  .week-summary-lbl { font-size: 9px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+  .day-col {
+    border-radius: 14px; border: 1.5px solid var(--border);
+    background: var(--paper); overflow: hidden;
+    transition: opacity .2s;
+  }
+  .day-col.future { opacity: .55; }
+  .day-col.today { border-color: var(--ink); }
+
+  .day-header {
+    padding: 9px 8px 7px; text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .day-col.today .day-header { background: var(--ink); border-color: var(--ink); }
+  .day-name { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+  .day-col.today .day-name { color: rgba(255,255,255,.6); }
+  .day-num { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; color: var(--ink); line-height: 1.1; }
+  .day-col.today .day-num { color: #FFF; }
+
+  .day-body { padding: 7px 7px 6px; min-height: 85px; display: flex; flex-direction: column; gap: 5px; }
+  .session-chip {
+    background: var(--tag); border: 1px solid var(--border); border-radius: 8px;
+    padding: 5px 7px; text-align: left; width: 100%;
+    font-family: inherit;
+  }
+  .session-chip:hover { background: var(--border); }
+  .chip-type { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px; }
+  .chip-trail .chip-type { color: var(--ink); }
+  .chip-renfo .chip-type { color: var(--muted); }
+  .chip-meta { font-size: 11px; font-weight: 700; color: var(--ink); }
+  .chip-title { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .add-day-btn {
+    margin-top: auto; background: none; border: 1px dashed var(--border);
+    border-radius: 8px; padding: 4px;
+    display: flex; align-items: center; justify-content: center;
+    width: 100%;
+  }
+  .add-day-btn:hover { border-color: var(--muted); }
+
+  /* ── History ── */
+  .filter-row { display: flex; gap: 8px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; }
+  .filter-btn {
+    border-radius: 99px; border: 1.5px solid var(--border);
+    padding: 6px 16px; font-size: 13px; font-weight: 700;
+    background: var(--paper); color: var(--muted);
+    transition: all .15s; font-family: inherit;
+  }
+  .filter-btn.active { background: var(--ink); color: #FFF; border-color: var(--ink); }
+  .filter-count { margin-left: auto; font-size: 13px; color: var(--muted); }
+
+  .history-list { display: flex; flex-direction: column; gap: 8px; }
+  .history-item {
+    background: var(--paper); border: 1px solid var(--border); border-radius: 16px;
+    padding: 15px 18px; display: flex; align-items: center; gap: 14px;
+    width: 100%; text-align: left; font-family: inherit;
+    transition: border-color .15s;
+  }
+  .history-item:hover { border-color: var(--ink); }
+  .history-date { text-align: center; min-width: 36px; flex-shrink: 0; }
+  .history-date-d { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; line-height: 1; }
+  .history-date-m { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .history-sep { width: 1px; align-self: stretch; background: var(--border); flex-shrink: 0; }
+  .history-content { flex: 1; min-width: 0; }
+  .history-badges { display: flex; gap: 6px; align-items: center; margin-bottom: 5px; flex-wrap: wrap; }
+  .history-title { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .history-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .empty-state { text-align: center; padding: 80px 20px; }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-label { font-size: 16px; font-weight: 700; }
+
+  /* ── Stats ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 16px; }
+  .kpi-card { background: var(--paper); border: 1px solid var(--border); border-radius: 16px; padding: 14px 14px; }
+  .kpi-val { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 900; line-height: 1; }
+  .kpi-lbl { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; margin-top: 6px; line-height: 1.3; }
+
+  .charts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .chart-card { background: var(--paper); border: 1px solid var(--border); border-radius: 16px; padding: 18px 16px 14px; }
+  .chart-title { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+  .chart-sub { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+
+  .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 100px; padding-top: 14px; }
+  .bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .bar-val { font-size: 9px; font-weight: 700; color: var(--ink); text-align: center; min-height: 12px; }
+  .bar { width: 100%; border-radius: 3px 3px 0 0; background: var(--border); transition: height .4s; }
+  .bar.filled { background: var(--ink); }
+  .bar-lbl { font-size: 9px; color: var(--muted); font-weight: 600; text-align: center; }
+
+  .zone-dist { background: var(--paper); border: 1px solid var(--border); border-radius: 16px; padding: 18px 22px; }
+  .zone-dist-title { font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+  .zone-row { display: grid; grid-template-columns: 110px 1fr 30px; gap: 12px; align-items: center; margin-bottom: 10px; }
+  .zone-name { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; }
+  .zone-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .zone-name small { color: var(--muted); font-weight: 400; font-size: 11px; }
+  .zone-bar-bg { height: 8px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+  .zone-bar-fill { height: 100%; border-radius: 99px; transition: width .5s; }
+  .zone-count { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 900; text-align: right; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(13,13,11,.55); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--paper); border-radius: 20px;
+    width: 100%; max-width: 580px; max-height: 92vh;
+    overflow-y: auto; box-shadow: 0 32px 80px rgba(0,0,0,.22);
+  }
+  .modal-header {
+    padding: 22px 26px 18px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    position: sticky; top: 0; background: var(--paper); z-index: 1;
+  }
+  .modal-title { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; margin-top: 8px; }
+  .modal-body { padding: 22px 26px; }
+  .modal-footer { padding: 0 26px 22px; display: flex; justify-content: flex-end; }
+
+  .close-btn { background: none; border: none; padding: 4px; flex-shrink: 0; }
+
+  /* Detail modal */
+  .metrics-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+  .metric-box { background: var(--bg); border-radius: 12px; padding: 12px 14px; }
+  .metric-label { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 5px; }
+  .metric-val { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 800; }
+
+  .zone-visual { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 14px; }
+  .zone-bar-strip { display: flex; height: 6px; }
+  .zone-strip-seg { flex: 1; }
+  .zone-legend { display: flex; gap: 10px; flex-wrap: wrap; padding: 10px 14px; }
+  .zone-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; }
+  .zone-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  .info-box { background: var(--bg); border-radius: 12px; padding: 13px 16px; margin-bottom: 12px; }
+  .info-box-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 7px; }
+  .info-box p { font-size: 14px; line-height: 1.6; }
+
+  .exercise-block { background: var(--bg); border-radius: 12px; padding: 13px 16px; margin-bottom: 10px; }
+  .exercise-name { font-weight: 700; font-size: 15px; margin-bottom: 10px; }
+  .sets-grid { display: grid; grid-template-columns: 24px 1fr 1fr; gap: 5px 16px; font-size: 13px; }
+  .sets-grid .col-head { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .sets-grid .set-num { color: var(--muted); }
+  .sets-grid .set-val { font-weight: 700; }
+
+  .delete-btn {
+    display: flex; align-items: center; gap: 7px;
+    background: none; border: 1px solid #FECACA; color: #DC2626;
+    border-radius: 10px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+    font-family: inherit;
+  }
+
+  /* Add modal form */
+  .type-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .type-btn {
+    padding: 12px; border-radius: 12px; border: 2px solid var(--border);
+    background: var(--bg); color: var(--muted);
+    font-weight: 800; font-size: 14px; font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: .03em; transition: all .15s;
+  }
+  .type-btn.active { border-color: var(--ink); background: var(--ink); color: #FFF; }
+
+  .form-row { display: grid; gap: 10px; margin-bottom: 14px; }
+  .form-row.col2 { grid-template-columns: 1fr 1fr; }
+  .form-row.col3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row.col12 { grid-template-columns: 1fr 2fr; }
+  .form-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 5px; }
+  .form-input {
+    width: 100%; border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 13px; font-size: 14px; color: var(--ink);
+    background: var(--bg); outline: none; font-family: inherit;
+  }
+  .form-input:focus { border-color: var(--ink); }
+  textarea.form-input { resize: vertical; }
+
+  .ex-block { background: var(--bg); border-radius: 12px; padding: 13px 14px; margin-bottom: 10px; }
+  .ex-header { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .ex-sets-grid { display: grid; grid-template-columns: 22px 1fr 1fr 22px; gap: 6px 8px; align-items: center; }
+  .ex-sets-grid .col-h { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .ex-sets-grid .set-n { font-size: 11px; color: var(--muted); text-align: center; }
+
+  .ghost-btn {
+    background: none; border: 1px dashed var(--border); border-radius: 10px;
+    padding: 10px; font-size: 13px; color: var(--muted); font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%; margin-top: 8px;
+  }
+  .ghost-btn:hover { border-color: var(--muted); }
+
+  .submit-btn {
+    width: 100%; background: var(--ink); color: #FFF; border: none; border-radius: 12px;
+    padding: 14px; font-size: 15px; font-weight: 900; margin-top: 16px;
+    font-family: 'Barlow Condensed', sans-serif; letter-spacing: .06em;
+  }
+  .submit-btn:hover { opacity: .9; }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .logo small { display: none; }
+    .nav-btn { padding: 7px 8px; font-size: 12px; gap: 5px; }
+    .btn-add { padding: 8px 12px; font-size: 12px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: repeat(2,1fr); }
+    .form-row.col3 { grid-template-columns: 1fr 1fr; }
+    .week-grid { gap: 5px; }
+    .day-num { font-size: 18px; }
+    .chip-meta { font-size: 10px; }
+  }
+  @media (max-width: 480px) {
+    .nav-btn span { display: none; }
+    .week-summary { display: none; }
+    .form-row.col2, .form-row.col12 { grid-template-columns: 1fr; }
+    .zone-row { grid-template-columns: 90px 1fr 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════════════════ -->
+<header>
+  <div class="header-inner">
+    <div class="logo">TRAIL<span>LOG</span><small>programme sportif</small></div>
+    <nav>
+      <button class="nav-btn active" data-tab="week" onclick="switchTab('week')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Semaine</span>
+      </button>
+      <button class="nav-btn" data-tab="history" onclick="switchTab('history')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+        <span>Historique</span>
+      </button>
+      <button class="nav-btn" data-tab="stats" onclick="switchTab('stats')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+        <span>Stats</span>
+      </button>
+    </nav>
+    <button class="btn-add" onclick="openAddModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      SÉANCE
+    </button>
+  </div>
+</header>
+
+<!-- ══ MAIN ════════════════════════════════════════════════════════════════ -->
+<main>
+  <h1 class="page-title" id="page-title">PLANNING SEMAINE</h1>
+  <div class="page-rule"></div>
+
+  <!-- WEEK VIEW -->
+  <div class="view active" id="view-week">
+    <div class="week-nav">
+      <div class="week-nav-center">
+        <button class="icon-btn" onclick="shiftWeek(-1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div>
+          <div class="week-label" id="week-label">—</div>
+          <div class="week-sub" id="week-sub"></div>
+        </div>
+        <button class="icon-btn" onclick="shiftWeek(1)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div class="week-summary" id="week-summary"></div>
+    </div>
+    <div class="week-grid" id="week-grid"></div>
+  </div>
+
+  <!-- HISTORY VIEW -->
+  <div class="view" id="view-history">
+    <div class="filter-row">
+      <button class="filter-btn active" data-filter="all"   onclick="setFilter('all')">Toutes</button>
+      <button class="filter-btn"        data-filter="trail" onclick="setFilter('trail')">Trail</button>
+      <button class="filter-btn"        data-filter="renfo" onclick="setFilter('renfo')">Renfo</button>
+      <span class="filter-count" id="filter-count"></span>
+    </div>
+    <div class="history-list" id="history-list"></div>
+  </div>
+
+  <!-- STATS VIEW -->
+  <div class="view" id="view-stats">
+    <div class="kpi-grid" id="kpi-grid"></div>
+    <div class="charts-grid" id="charts-grid"></div>
+    <div class="zone-dist">
+      <div class="zone-dist-title">Répartition par zone d'intensité</div>
+      <div id="zone-dist-rows"></div>
+    </div>
+  </div>
+</main>
+
+<!-- ══ DETAIL MODAL ════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header" id="detail-header"></div>
+    <div class="modal-body"   id="detail-body"></div>
+    <div class="modal-footer">
+      <button class="delete-btn" id="detail-delete-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Supprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADD MODAL ═══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;">Nouvelle séance</h2>
+      <button class="close-btn" onclick="closeModal('add-modal')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <!-- Type toggle -->
+      <div class="type-toggle">
+        <button class="type-btn active" id="type-trail" onclick="setFormType('trail')">⛰  TRAIL RUNNING</button>
+        <button class="type-btn"        id="type-renfo" onclick="setFormType('renfo')">💪  RENFORCEMENT</button>
+      </div>
+      <!-- Common fields -->
+      <div class="form-row col12">
+        <div><div class="form-label">Date</div><input type="date" id="f-date" class="form-input"/></div>
+        <div><div class="form-label">Titre</div><input type="text" id="f-title" class="form-input" placeholder="Sortie longue – Forêt de Compiègne"/></div>
+      </div>
+      <!-- Trail fields -->
+      <div id="trail-fields">
+        <div class="form-row col3">
+          <div><div class="form-label">Distance (km)</div><input type="number" id="f-dist" class="form-input" placeholder="18.5" step=".1"/></div>
+          <div><div class="form-label">Dénivelé + (m)</div><input type="number" id="f-dplus" class="form-input" placeholder="650"/></div>
+          <div><div class="form-label">Durée (min)</div><input type="number" id="f-dur" class="form-input" placeholder="135"/></div>
+        </div>
+        <div class="form-row col2">
+          <div><div class="form-label">FC moyenne (bpm)</div><input type="number" id="f-hr" class="form-input" placeholder="142"/></div>
+          <div>
+            <div class="form-label">Zone d'intensité</div>
+            <select id="f-zone" class="form-input">
+              <option value="1">Z1 — Récupération (&lt;60%)</option>
+              <option value="2" selected>Z2 — Endurance fond (60–70%)</option>
+              <option value="3">Z3 — Tempo (70–80%)</option>
+              <option value="4">Z4 — Seuil (80–90%)</option>
+              <option value="5">Z5 — VO2max (&gt;90%)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row"><div class="form-label">Terrain / Parcours</div><input type="text" id="f-terrain" class="form-input" placeholder="Sentiers forestiers, portions techniques..."/></div>
+        <div class="form-row"><div class="form-label">Notes</div><textarea id="f-notes" class="form-input" rows="3" placeholder="Ressenti, gestion de l'effort, ravitaillement..."></textarea></div>
+      </div>
+      <!-- Renfo fields -->
+      <div id="renfo-fields" style="display:none;">
+        <div class="form-label" style="margin-bottom:10px;">Exercices (poids de corps)</div>
+        <div id="ex-list"></div>
+        <button class="ghost-btn" onclick="addExercise()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter un exercice
+        </button>
+      </div>
+      <button class="submit-btn" onclick="submitSession()">ENREGISTRER LA SÉANCE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ CONSTANTS ═════════════════════════════════════════════════════════════════
+const MONTHS   = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+const DAYS_S   = ['L','M','M','J','V','S','D'];
+const DAYS_F   = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const ZONES    = [
+  {id:1,l:'Z1',name:'Récupération',  c:'#B0ADAD',r:'< 60%'},
+  {id:2,l:'Z2',name:'Endurance fond',c:'#6B8F71',r:'60–70%'},
+  {id:3,l:'Z3',name:'Tempo',         c:'#D4A843',r:'70–80%'},
+  {id:4,l:'Z4',name:'Seuil',         c:'#C17A3A',r:'80–90%'},
+  {id:5,l:'Z5',name:'VO2max',        c:'#B94040',r:'> 90%'},
+];
+const STORAGE_KEY = 'traillog_html_v1';
+
+// ══ HELPERS ═══════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const dateOf = s => new Date(s + 'T00:00:00');
+const toISO  = d => d.toISOString().split('T')[0];
+const sameDay = (a,b) => a.toDateString() === b.toDateString();
+
+function getMonday(d) {
+  const x = new Date(d); x.setHours(0,0,0,0);
+  const day = x.getDay(); x.setDate(x.getDate() - (day===0 ? 6 : day-1)); return x;
+}
+function weekSpan(mon) {
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  return `${mon.getDate()} ${MONTHS[mon.getMonth()]} — ${sun.getDate()} ${MONTHS[sun.getMonth()]} ${sun.getFullYear()}`;
+}
+function pace(dist, dur) {
+  if (!dist||!dur) return '—';
+  const spm = (dur*60)/dist;
+  return `${Math.floor(spm/60)}'${String(Math.round(spm%60)).padStart(2,'0')}"`;
+}
+function fmtDur(min) {
+  return `${Math.floor(min/60)}h${String(min%60).padStart(2,'0')}`;
+}
+function fmtDate(d) { return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; }
+function zoneBadge(z, small) {
+  const zone = ZONES[z-1]; if (!zone) return '';
+  const s = small ? 'font-size:9px;padding:2px 7px;' : '';
+  return `<span class="zone-badge" style="border-color:${zone.c};color:${zone.c};${s}">${zone.l} <span style="opacity:.8;font-weight:400;">${zone.name}</span></span>`;
+}
+function typeBadge(type, small) {
+  const s = small ? 'font-size:9px;padding:2px 7px;' : '';
+  return `<span class="badge badge-${type}" style="${s}">${type==='trail'?'⛰ TRAIL':'💪 RENFO'}</span>`;
+}
+function svgIcon(n, s=14, c='var(--muted)') {
+  const icons = {
+    close:  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    trash:  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`,
+    plus:   `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+    chevR:  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`,
+    mount:  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 20 9 8 13 14 16 10 21 20"/></svg>`,
+    clock:  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    hr:     `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+    run:    `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="17" cy="4" r="2"/><path d="M15.5 8.5L13 11l-3 1-2.5 5H5"/><path d="M11 11l2 4 3 1 2.5 3"/></svg>`,
+    terrain:`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l4-8 4 5 3-3 4 6"/><line x1="3" y1="21" x2="21" y2="21"/></svg>`,
+    note:   `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  };
+  return icons[n] || '';
+}
+
+// ══ DATA ══════════════════════════════════════════════════════════════════════
+function makeSeed() {
+  const td = new Date(); td.setHours(0,0,0,0);
+  const d = n => { const x=new Date(td); x.setDate(x.getDate()+n); return toISO(x); };
+  return [
+    {id:1,date:d(-16),type:'trail',title:'Sortie longue – Forêt de Compiègne',distance:22.4,dplus:480,duration:168,hr:138,zone:2,terrain:'Sentiers forestiers, quelques portions techniques',notes:'Belle sortie en Z2, jambes fraîches. Ravitaillement au km 14.'},
+    {id:2,date:d(-14),type:'renfo',title:'Gainage & Proprioception',exercises:[{name:'Gainage planche',sets:[{reps:0,duration:60},{reps:0,duration:60},{reps:0,duration:45}]},{name:'Fentes bulgares',sets:[{reps:12,duration:0},{reps:12,duration:0},{reps:10,duration:0}]},{name:'Pistol squat (assisté)',sets:[{reps:8,duration:0},{reps:8,duration:0},{reps:6,duration:0}]},{name:'Pont fessier unilatéral',sets:[{reps:15,duration:0},{reps:15,duration:0},{reps:12,duration:0}]}]},
+    {id:3,date:d(-12),type:'trail',title:'Fractionné côtes – Butte Montmorency',distance:12.1,dplus:620,duration:78,hr:162,zone:4,terrain:'Côtes courtes et raides, retour sentier plat',notes:'6×3\' en montée à allure Z4. Récup active en descente.'},
+    {id:4,date:d(-10),type:'trail',title:'Récup active – Tour du lac',distance:8.5,dplus:95,duration:65,hr:122,zone:1,terrain:'Chemin stabilisé, plat',notes:'Sortie très facile pour récupérer des côtes de mercredi.'},
+    {id:5,date:d(-8),type:'renfo',title:'Renforcement Bas du Corps',exercises:[{name:'Squat sauté',sets:[{reps:10,duration:0},{reps:10,duration:0},{reps:8,duration:0}]},{name:'Step-up boîte',sets:[{reps:12,duration:0},{reps:12,duration:0},{reps:10,duration:0}]},{name:'Nordic curl',sets:[{reps:5,duration:0},{reps:5,duration:0},{reps:4,duration:0}]},{name:'Gainage latéral',sets:[{reps:0,duration:45},{reps:0,duration:45},{reps:0,duration:40}]}]},
+    {id:6,date:d(-7),type:'trail',title:'Trail technique – Vallée de Chevreuse',distance:18.7,dplus:740,duration:152,hr:145,zone:3,terrain:'Single-track technique, rochers, racines. Bonne boue en bas de vallée.',notes:'Portions techniques au km 7 et km 13. Bonne gestion de l\'allure.'},
+    {id:7,date:d(-5),type:'trail',title:'Endurance fondamentale',distance:14.2,dplus:310,duration:108,hr:134,zone:2,terrain:'Mix route et sentier, terrain varié',notes:'Allure très contrôlée, nose breathing tout du long.'},
+    {id:8,date:d(-3),type:'trail',title:'VMA – Fractionné plat',distance:10.0,dplus:40,duration:55,hr:174,zone:5,terrain:'Piste synthétique',notes:'8×400m à 105% VMA. Récup 90s. Très bonne séance.'},
+    {id:9,date:d(-1),type:'renfo',title:'Mobilité & Gainage',exercises:[{name:'Gainage planche',sets:[{reps:0,duration:75},{reps:0,duration:60},{reps:0,duration:60}]},{name:'Hip thrust',sets:[{reps:15,duration:0},{reps:15,duration:0},{reps:12,duration:0}]},{name:'Dead bug',sets:[{reps:10,duration:0},{reps:10,duration:0},{reps:10,duration:0}]}]},
+  ];
+}
+
+let sessions = [];
+try { const r = localStorage.getItem(STORAGE_KEY); sessions = r ? JSON.parse(r) : makeSeed(); }
+catch { sessions = makeSeed(); }
+
+function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions)); } catch {} }
+
+// ══ NAVIGATION ════════════════════════════════════════════════════════════════
+let currentTab = 'week';
+const PAGE_TITLES = {week:'PLANNING SEMAINE', history:'HISTORIQUE', stats:'STATISTIQUES'};
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id===`view-${tab}`));
+  $('page-title').textContent = PAGE_TITLES[tab] || '';
+  if (tab==='week')    renderWeek();
+  if (tab==='history') renderHistory();
+  if (tab==='stats')   renderStats();
+}
+
+// ══ WEEK VIEW ═════════════════════════════════════════════════════════════════
+let currentMonday = getMonday(new Date());
+
+function shiftWeek(n) { currentMonday.setDate(currentMonday.getDate()+n*7); renderWeek(); }
+
+function renderWeek() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const mon = new Date(currentMonday);
+  const isThisWeek = sameDay(mon, getMonday(new Date()));
+
+  $('week-label').textContent = weekSpan(mon);
+  $('week-sub').textContent = isThisWeek ? 'Semaine en cours' : '';
+
+  const days = Array.from({length:7}, (_,i) => { const d=new Date(mon); d.setDate(mon.getDate()+i); return d; });
+  const weekEnd = new Date(mon); weekEnd.setDate(mon.getDate()+7);
+
+  // Weekly summary
+  const weekTrail = sessions.filter(s => {
+    const d = dateOf(s.date);
+    return s.type==='trail' && d>=mon && d<weekEnd;
+  });
+  const wKm  = weekTrail.reduce((t,s)=>t+s.distance,0);
+  const wDp  = weekTrail.reduce((t,s)=>t+s.dplus,0);
+  const wMin = weekTrail.reduce((t,s)=>t+s.duration,0);
+  $('week-summary').innerHTML = wKm>0 ? `
+    <div class="week-summary-item"><div class="week-summary-val">${wKm.toFixed(1)} km</div><div class="week-summary-lbl">Distance</div></div>
+    <div class="week-summary-item"><div class="week-summary-val">${wDp} m</div><div class="week-summary-lbl">D+</div></div>
+    <div class="week-summary-item"><div class="week-summary-val">${fmtDur(wMin)}</div><div class="week-summary-lbl">Temps</div></div>
+  ` : '';
+
+  // Grid
+  $('week-grid').innerHTML = days.map((d,i) => {
+    const ds = sessions.filter(s => sameDay(dateOf(s.date), d));
+    const isToday = sameDay(d, today);
+    const isFuture = d > today;
+    const chips = ds.map(s => `
+      <button class="session-chip chip-${s.type}" onclick="openDetail(${s.id})">
+        <div class="chip-type">${s.type==='trail'?'⛰ Trail':'💪 Renfo'}</div>
+        ${s.type==='trail' ? `<div class="chip-meta">${s.distance} km · ${s.dplus}m↑</div>` : ''}
+        <div class="chip-title">${s.title.split('–')[0].trim()}</div>
+      </button>
+    `).join('');
+    return `
+      <div class="day-col${isToday?' today':''}${isFuture?' future':''}">
+        <div class="day-header">
+          <div class="day-name">${DAYS_S[i]}</div>
+          <div class="day-num">${d.getDate()}</div>
+        </div>
+        <div class="day-body">
+          ${chips}
+          <button class="add-day-btn" onclick="openAddModal('${toISO(d)}')">${svgIcon('plus',13,'var(--border)')}</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ══ HISTORY VIEW ══════════════════════════════════════════════════════════════
+let currentFilter = 'all';
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter===f));
+  renderHistory();
+}
+
+function renderHistory() {
+  const sorted = [...sessions].sort((a,b)=>b.date.localeCompare(a.date));
+  const filtered = currentFilter==='all' ? sorted : sorted.filter(s=>s.type===currentFilter);
+  $('filter-count').textContent = `${filtered.length} séance${filtered.length>1?'s':''}`;
+
+  if (!filtered.length) {
+    $('history-list').innerHTML = `<div class="empty-state"><div class="empty-icon">⛰</div><div class="empty-label">Aucune séance enregistrée</div></div>`;
+    return;
+  }
+
+  $('history-list').innerHTML = filtered.map(s => {
+    const d = dateOf(s.date);
+    const meta = s.type==='trail'
+      ? `${s.distance} km · ${s.dplus}m↑ · ${fmtDur(s.duration)} · ${pace(s.distance,s.duration)}/km${s.hr?' · '+s.hr+' bpm':''}`
+      : `${s.exercises?.length} exercice${s.exercises?.length>1?'s':''}`;
+    return `
+      <button class="history-item" onclick="openDetail(${s.id})">
+        <div class="history-date">
+          <div class="history-date-d">${d.getDate()}</div>
+          <div class="history-date-m">${MONTHS[d.getMonth()]}</div>
+        </div>
+        <div class="history-sep"></div>
+        <div class="history-content">
+          <div class="history-badges">
+            ${typeBadge(s.type,true)}
+            ${s.type==='trail'&&s.zone ? zoneBadge(s.zone,true) : ''}
+          </div>
+          <div class="history-title">${s.title}</div>
+          <div class="history-meta">${meta}</div>
+        </div>
+        ${svgIcon('chevR',16,'var(--border)')}
+      </button>
+    `;
+  }).join('');
+}
+
+// ══ STATS VIEW ════════════════════════════════════════════════════════════════
+function renderStats() {
+  const trail = sessions.filter(s=>s.type==='trail');
+  const totalKm  = trail.reduce((t,s)=>t+s.distance,0);
+  const totalDp  = trail.reduce((t,s)=>t+s.dplus,0);
+  const totalMin = trail.reduce((t,s)=>t+s.duration,0);
+  const totalRenfo = sessions.filter(s=>s.type==='renfo').length;
+
+  // KPIs
+  $('kpi-grid').innerHTML = [
+    {v:trail.length,        u:'sorties trail'},
+    {v:totalKm.toFixed(0)+' km', u:'distance totale'},
+    {v:totalDp.toLocaleString()+' m', u:'dénivelé total'},
+    {v:fmtDur(totalMin),    u:'temps cumulé'},
+    {v:totalRenfo,          u:'séances renfo'},
+  ].map(k=>`
+    <div class="kpi-card">
+      <div class="kpi-val">${k.v}</div>
+      <div class="kpi-lbl">${k.u}</div>
+    </div>
+  `).join('');
+
+  // Build 10 weeks
+  const now = new Date();
+  const weeks = Array.from({length:10},(_,i)=>{
+    const m = getMonday(new Date(now)); m.setDate(m.getDate()-i*7); return m;
+  }).reverse();
+
+  function byWeek(fn) {
+    return weeks.map((m,wi) => {
+      const end = new Date(m); end.setDate(m.getDate()+7);
+      const ws = trail.filter(s=>{ const d=dateOf(s.date); return d>=m&&d<end; });
+      return {l:`S${wi+1}`, v: fn(ws)};
+    });
+  }
+
+  const charts = [
+    {title:'Kilomètres / semaine',    data:byWeek(ws=>parseFloat(ws.reduce((t,s)=>t+s.distance,0).toFixed(1)))},
+    {title:'Dénivelé + / semaine',    data:byWeek(ws=>ws.reduce((t,s)=>t+s.dplus,0))},
+    {title:'Temps en mouvement (min)',data:byWeek(ws=>ws.reduce((t,s)=>t+s.duration,0))},
+  ];
+
+  $('charts-grid').innerHTML = charts.map(c => {
+    const max = Math.max(...c.data.map(d=>d.v), 1);
+    const bars = c.data.map(d => {
+      const h = Math.max((d.v/max)*70, d.v>0?3:0);
+      return `
+        <div class="bar-wrap">
+          <div class="bar-val">${d.v>0?d.v:''}</div>
+          <div class="bar${d.v>0?' filled':''}" style="height:${h}px;"></div>
+          <div class="bar-lbl">${d.l}</div>
+        </div>
+      `;
+    }).join('');
+    return `
+      <div class="chart-card">
+        <div class="chart-title">${c.title}</div>
+        <div class="chart-sub">10 dernières semaines</div>
+        <div class="bar-chart">${bars}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Zone distribution
+  const maxCount = Math.max(...ZONES.map(z=>trail.filter(s=>s.zone===z.id).length), 1);
+  $('zone-dist-rows').innerHTML = ZONES.map(z => {
+    const count = trail.filter(s=>s.zone===z.id).length;
+    const pct = (count/maxCount)*100;
+    return `
+      <div class="zone-row">
+        <div class="zone-name">
+          <div class="zone-dot" style="background:${z.c};"></div>
+          <strong>${z.l}</strong><small>${z.name}</small>
+        </div>
+        <div class="zone-bar-bg">
+          <div class="zone-bar-fill" style="width:${pct}%;background:${z.c};"></div>
+        </div>
+        <div class="zone-count">${count}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ══ DETAIL MODAL ══════════════════════════════════════════════════════════════
+let detailId = null;
+
+function openDetail(id) {
+  const s = sessions.find(x=>x.id===id);
+  if (!s) return;
+  detailId = id;
+  const d = dateOf(s.date);
+  const zone = s.zone ? ZONES[s.zone-1] : null;
+
+  $('detail-header').innerHTML = `
+    <div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+        ${typeBadge(s.type)}
+        ${zone ? zoneBadge(s.zone) : ''}
+        <span style="font-size:13px;color:var(--muted);">${DAYS_F[d.getDay()===0?6:d.getDay()-1]}, ${fmtDate(d)}</span>
+      </div>
+      <div class="modal-title">${s.title}</div>
+    </div>
+    <button class="close-btn" onclick="closeModal('detail-modal')">${svgIcon('close',20,'var(--muted)')}</button>
+  `;
+
+  let body = '';
+  if (s.type==='trail') {
+    const metrics = [
+      {icon:'run',   label:'Distance',   val:`${s.distance} km`},
+      {icon:'mount', label:'D+',         val:`${s.dplus} m`},
+      {icon:'clock', label:'Durée',      val:fmtDur(s.duration)},
+      {icon:'run',   label:'Allure moy.',val:`${pace(s.distance,s.duration)}/km`},
+      {icon:'hr',    label:'FC moyenne', val:s.hr?`${s.hr} bpm`:'—'},
+      {icon:'terrain',label:'Zone',      val:zone?`${zone.l} – ${zone.name}`:'—'},
+    ];
+    body += `<div class="metrics-grid">` + metrics.map(m=>`
+      <div class="metric-box">
+        <div class="metric-label">${svgIcon(m.icon,12,'var(--muted)')} ${m.label}</div>
+        <div class="metric-val">${m.val}</div>
+      </div>
+    `).join('') + `</div>`;
+
+    if (zone) {
+      const strips = ZONES.map(z=>`<div class="zone-strip-seg" style="background:${z.id<=s.zone?z.c:'var(--border)'};"></div>`).join('');
+      const legend = ZONES.map(z=>`
+        <span class="zone-legend-item" style="color:${z.id===s.zone?'var(--ink)':'var(--muted)'};">
+          <span class="zone-legend-dot" style="background:${z.c};"></span>
+          ${z.l} <span style="opacity:.7;">${z.r}</span>
+        </span>
+      `).join('');
+      body += `<div class="zone-visual"><div class="zone-bar-strip">${strips}</div><div class="zone-legend">${legend}</div></div>`;
+    }
+    if (s.terrain) body += `<div class="info-box"><div class="info-box-label">${svgIcon('terrain',12,'var(--muted)')} Terrain</div><p>${s.terrain}</p></div>`;
+    if (s.notes)   body += `<div class="info-box"><div class="info-box-label">${svgIcon('note',12,'var(--muted)')} Notes</div><p>${s.notes}</p></div>`;
+  }
+
+  if (s.type==='renfo') {
+    body += s.exercises.map(ex => {
+      const rows = ex.sets.map((st,j)=>`
+        <span class="set-num">${j+1}</span>
+        <span class="set-val">${st.reps>0?st.reps+' reps':'—'}</span>
+        <span class="set-val">${st.duration>0?st.duration+'s':'—'}</span>
+      `).join('');
+      return `
+        <div class="exercise-block">
+          <div class="exercise-name">${ex.name}</div>
+          <div class="sets-grid">
+            <span class="col-head">#</span><span class="col-head">Reps</span><span class="col-head">Durée</span>
+            ${rows}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  $('detail-body').innerHTML = body;
+  $('detail-delete-btn').onclick = () => deleteSession(detailId);
+  $('detail-modal').classList.add('open');
+}
+
+function deleteSession(id) {
+  if (!confirm('Supprimer cette séance ?')) return;
+  sessions = sessions.filter(s=>s.id!==id);
+  save();
+  closeModal('detail-modal');
+  refreshCurrentView();
+}
+
+// ══ ADD MODAL ═════════════════════════════════════════════════════════════════
+let formType = 'trail';
+let defaultAddDate = null;
+
+function openAddModal(date) {
+  defaultAddDate = date || toISO(new Date());
+  $('f-date').value = defaultAddDate;
+  $('f-title').value=''; $('f-dist').value=''; $('f-dplus').value='';
+  $('f-dur').value=''; $('f-hr').value=''; $('f-terrain').value=''; $('f-notes').value='';
+  $('f-zone').value='2';
+  setFormType('trail');
+  initExercises();
+  $('add-modal').classList.add('open');
+}
+
+function setFormType(t) {
+  formType = t;
+  $('type-trail').classList.toggle('active', t==='trail');
+  $('type-renfo').classList.toggle('active', t==='renfo');
+  $('trail-fields').style.display = t==='trail' ? '' : 'none';
+  $('renfo-fields').style.display = t==='renfo' ? '' : 'none';
+  $('f-title').placeholder = t==='trail' ? 'Sortie longue – Forêt de Compiègne' : 'Gainage & Proprioception';
+}
+
+// Exercise management
+let exercises = [];
+function initExercises() {
+  exercises = [{name:'',sets:[{reps:'',duration:''}]}];
+  renderExercises();
+}
+function addExercise() {
+  exercises.push({name:'',sets:[{reps:'',duration:''}]});
+  renderExercises();
+}
+function removeExercise(i) {
+  if (exercises.length<=1) return;
+  exercises.splice(i,1); renderExercises();
+}
+function addSet(ei) {
+  exercises[ei].sets.push({reps:'',duration:''}); renderExercises();
+}
+function removeSet(ei,si) {
+  if (exercises[ei].sets.length<=1) return;
+  exercises[ei].sets.splice(si,1); renderExercises();
+}
+function renderExercises() {
+  $('ex-list').innerHTML = exercises.map((ex,i)=>`
+    <div class="ex-block">
+      <div class="ex-header">
+        <input class="form-input" style="flex:1;" placeholder="Nom de l'exercice"
+          value="${ex.name}" oninput="exercises[${i}].name=this.value"/>
+        ${exercises.length>1?`<button style="background:none;border:none;cursor:pointer;padding:4px;" onclick="removeExercise(${i})">${svgIcon('trash',15,'#DC2626')}</button>`:''}
+      </div>
+      <div class="ex-sets-grid">
+        <span class="col-h">#</span><span class="col-h">Reps</span><span class="col-h">Durée (s)</span><span></span>
+        ${ex.sets.map((st,j)=>`
+          <span class="set-n">${j+1}</span>
+          <input type="number" class="form-input" style="padding:7px 10px;text-align:center;" placeholder="—"
+            value="${st.reps}" oninput="exercises[${i}].sets[${j}].reps=this.value"/>
+          <input type="number" class="form-input" style="padding:7px 10px;text-align:center;" placeholder="—"
+            value="${st.duration}" oninput="exercises[${i}].sets[${j}].duration=this.value"/>
+          <button style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;" onclick="removeSet(${i},${j})">${svgIcon('close',13,'var(--muted)')}</button>
+        `).join('')}
+      </div>
+      <button class="ghost-btn" style="margin-top:8px;" onclick="addSet(${i})">+ série</button>
+    </div>
+  `).join('');
+}
+
+function submitSession() {
+  const title = $('f-title').value.trim();
+  const date  = $('f-date').value;
+  if (!title || !date) { alert('Titre et date requis.'); return; }
+
+  const base = {id:Date.now(), date, type:formType, title};
+  let session;
+  if (formType==='trail') {
+    session = {...base,
+      distance: parseFloat($('f-dist').value)||0,
+      dplus:    parseInt($('f-dplus').value)||0,
+      duration: parseInt($('f-dur').value)||0,
+      hr:       parseInt($('f-hr').value)||0,
+      zone:     parseInt($('f-zone').value)||2,
+      terrain:  $('f-terrain').value.trim(),
+      notes:    $('f-notes').value.trim(),
+    };
+  } else {
+    session = {...base,
+      exercises: exercises.filter(ex=>ex.name.trim()).map(ex=>({
+        name:ex.name.trim(),
+        sets:ex.sets.map(s=>({reps:parseInt(s.reps)||0,duration:parseInt(s.duration)||0}))
+      }))
+    };
+  }
+  sessions.push(session);
+  save();
+  closeModal('add-modal');
+  refreshCurrentView();
+}
+
+// ══ UTILS ═════════════════════════════════════════════════════════════════════
+function closeModal(id) { $(id).classList.remove('open'); }
+
+function refreshCurrentView() {
+  if (currentTab==='week')    renderWeek();
+  if (currentTab==='history') renderHistory();
+  if (currentTab==='stats')   renderStats();
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target===overlay) overlay.classList.remove('open'); });
+});
+
+// ══ INIT ══════════════════════════════════════════════════════════════════════
+initExercises();
+renderWeek();
+</script>
+</body>
+</html>
